@@ -94,7 +94,7 @@ class FileTreeTest {
                 Arguments.of(createTree(2), 2),
                 Arguments.of(createTree(3), 2),
                 Arguments.of(createTree(4), 3),
-                Arguments.of(createTree(5), 3),
+                Arguments.of(createTree(5), 3), // Here
                 Arguments.of(createTree(6), 3),
                 Arguments.of(createTree(7), 3));
     }
@@ -107,7 +107,21 @@ class FileTreeTest {
         assertThat(fileTree.getHeight()).isEqualTo(expectedHeight);
     }
 
+    @Test
+    void testPersisted() throws IOException {
+        FileTree<Long> fileTree = createTree(new File("c:\\temp\\checkfile.txt"), 4);
+        fileTree.reBalance();
+        fileTree.close();
+    }
+
     private static FileTree<Long> createTree(int elements) throws IOException {
+        return createTree(File.createTempFile("___", ".tmp"), elements);
+    }
+
+    private static FileTree<Long> createTree(File file, int elements) throws IOException {
+        if (file.exists()) {
+            file.delete();
+        }
         Comparator<Long> comparator = new Comparator<Long>() {
 
             @Override
@@ -139,7 +153,7 @@ class FileTreeTest {
             }
         };
 
-        FileTree<Long> fileTree = new FileTree<>(File.createTempFile("___", ".tmp"), comparator, converter);
+        FileTree<Long> fileTree = new FileTree<>(file, comparator, converter);
 
         for (int i = 0; i < elements; i++) {
             fileTree.add((long) i);
