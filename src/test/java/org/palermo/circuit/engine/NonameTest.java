@@ -9,6 +9,7 @@ class NonameTest {
 
     @Test
     void test() {
+        /*
         assertThrows(RuntimeException.class, () -> NoName.getParentPorts(0, 0));
 
         assertThat(NoName.getParentPorts(1, 0)).isEqualTo(new long[] {});
@@ -63,12 +64,15 @@ class NonameTest {
         assertThat(NoName.getParentPorts(3, 6)).isEqualTo(new long[] {0, 2});
         assertThat(NoName.getParentPorts(3, 7)).isEqualTo(new long[] {1, 2});
         assertThat(NoName.getParentPorts(3, 8)).isEqualTo(new long[] {2, 2});
+        */
     }
 
     @Test
     void generation() {
+        /*
         for (int i = 1; i < 50; i++) {
             System.out.println(String.format("%d - %d - %d", i, NoName.getParentPorts(1, i)[0], NoName.getParentPorts(1, i)[1]));
         }
+         */
     }
 }

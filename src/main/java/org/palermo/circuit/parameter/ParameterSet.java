@@ -10,97 +10,74 @@ import java.util.List;
 
 public class ParameterSet {
 
-    private final List<List<Parameter>> argumentList = new ArrayList<>();
+    private final List<List<Parameter>> argumentList;
+    private final List<Direction> directions;
+    private final List<Class<? extends Parameter>> classes;
+    private final List<Simplifier> simplifiers;
 
-    private List<Direction> directions;
-    private List<Class<? extends Parameter>> classes;
-    private List<Simplifier> simplifiers;
-
-    private ParameterSet() {
-
-    }
-
-    public ParameterSet add(Parameter ... parameters) {
-
-        if (this.directions == null) {
-            throw new RuntimeException("The directions were not configured");
-        }
-
-        if (this.classes == null) {
-            throw new RuntimeException("The class types were not configured");
-        }
-
-        if (this.classes.size() != parameters.length) {
-            throw new RuntimeException(String.format("Parameters [%d] with inconsistent size, the class definition demands %d parameters",
-                    parameters.length, this.classes.size()));
-        }
-
-        if (argumentList.size() == 0) {
-            for (int i = 0; i < parameters.length; i++) {
-                argumentList.add(new ArrayList<>());
-            }
-        }
-        for (int i = 0; i < parameters.length; i++) {
-            if (!parameters[i].getClass().equals(classes.get(i))) {
-                throw new RuntimeException(String.format("Parameter on index %d with type %s is supposed to be of type %s",
-                        i, parameters[i].getClass().getName(), classes.get(i).getName()));
-            }
-            argumentList.get(i).add(parameters[i]);
-        }
-        return this;
-    }
-
-    public static ParameterSet create() {
-        return new ParameterSet();
-    }
-
-
-    public ParameterSet configure(Direction ... directions) {
-        if (classes != null) {
-            if (classes.size() != directions.length) {
-                throw new RuntimeException(String.format("The directions length [%d] must have the same length of existing classes [%d] definition",
-                        directions.length, classes.size()));
-            }
-        }
-        this.directions = Arrays.asList(directions);
-        return this;
-    }
-
-    public ParameterSet configure(Class<? extends Parameter> ... parameterClass) {
-        if (directions != null) {
-            if (directions.size() != parameterClass.length) {
-                throw new RuntimeException(String.format("The classes length [%d] must have the same length of existing directions [%d] definition",
-                        parameterClass.length, directions.size()));
-            }
-        }
-        this.classes = Arrays.asList(parameterClass);
-        return this;
-    }
-
-    public ParameterSet simplify() {
-
-        simplifiers = new ArrayList<Simplifier>();
-
-        for (int i = 0; i < classes.size(); i++) {
-            if (classes.get(i).equals(CharParameter.class)) {
-                simplifiers.add(CharSimplifier.of(argumentList.get(i)));
-            }
-            else if (classes.get(i).equals(EnumParameter.class)) {
-                simplifiers.add(EnumSimplifier.of(argumentList.get(i)));
-            }
-            else {
-                throw new RuntimeException("Not implemented for " + classes.get(i).getName());
-            }
-        }
-
-        return this;
+    protected ParameterSet(List<Simplifier> simplifiers,
+                           List<Direction> directions,
+                           List<Class<? extends Parameter>> classes,
+                           List<List<Parameter>> argumentList) {
+        this.simplifiers = simplifiers;
+        this.directions = directions;
+        this.classes = classes;
+        this.argumentList = argumentList;
     }
 
     public int getInputSize() {
         int total = 2; // Adding absolute 0 and absolute 1
-        for (Simplifier simplifier : simplifiers) {
-            total += simplifier.getSize();
+        for (int i = 0; i < simplifiers.size(); i++) {
+            if (directions.get(i) == Direction.INPUT) {
+                total += simplifiers.get(i).getSize();
+            }
         }
         return total;
+    }
+
+    public int getOutputSize() {
+        int total = 0;
+        for (int i = 0; i < simplifiers.size(); i++) {
+            if (directions.get(i) == Direction.OUTPUT) {
+                total += simplifiers.get(i).getSize();
+            }
+        }
+        return total;
+    }
+
+    public boolean[] getInputSample(int i) {
+        boolean[] input = new boolean[getInputSize()];
+        int j = 0;
+        input[j++] = false;
+        input[j++] = true;
+        for (int s = 0; s < simplifiers.size(); s++) {
+            if (directions.get(s) == Direction.INPUT) {
+                for (boolean b : simplifiers.get(s).simplify(this.argumentList.get(s).get(i).getRawData())) {
+                    input[j++] = b;
+                }
+            }
+        }
+        return input;
+    }
+
+    public boolean[] getOutputSample(int i) {
+        boolean[] output = new boolean[getOutputSize()];
+        int j = 0;
+        for (int s = 0; s < simplifiers.size(); s++) {
+            if (directions.get(s) == Direction.OUTPUT) {
+                for (boolean b : simplifiers.get(s).simplify(this.argumentList.get(s).get(i).getRawData())) {
+                    output[j++] = b;
+                }
+            }
+        }
+        return output;
+    }
+
+    public int getSampleCount() {
+        return argumentList.get(0).size();
+    }
+
+    public static ParameterSetBuilder builder() {
+        return new ParameterSetBuilder();
     }
 }
