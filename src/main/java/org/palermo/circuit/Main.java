@@ -1,8 +1,12 @@
 package org.palermo.circuit;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.palermo.circuit.engine.NoName;
-import org.palermo.circuit.parameter.*;
+import org.palermo.circuit.clock.Clock;
+import org.palermo.circuit.parameter.CharParameter;
+import org.palermo.circuit.parameter.Direction;
+import org.palermo.circuit.parameter.EnumParameter;
+import org.palermo.circuit.parameter.ParameterSet;
+import org.palermo.circuit.util.CircuitUtils;
 import org.palermo.circuit.util.Converter;
 import org.palermo.circuit.util.FileTreeSet;
 
@@ -28,8 +32,16 @@ public class Main {
                 .add(CharParameter.of('0'), EnumParameter.of("NUMBER"))
                 .build();
 
-        FileTreeSet<Long> relevantPorts = createFileTreeSet();
-        FileTreeSet<Long> sortedOutput = createSortedOutputFileTreeSet(parameterSet, relevantPorts);
+        Clock clock = Clock.start();
+
+        FileTreeSet<Long> relevantPorts = createFileTreeSet(
+                new File("C:\\temp\\relevant.tree"),
+                new File("C:\\temp\\relevant.data"));
+        FileTreeSet<Long> sortedOutput = createSortedOutputFileTreeSet(
+                new File("C:\\temp\\sortedOutput.tree"),
+                new File("C:\\temp\\sortedOutput.data"),
+                parameterSet,
+                relevantPorts);
 
         long[] output = new long[parameterSet.getOutputSize()];
         for (int i = 0; i < output.length; i++) {
@@ -41,13 +53,12 @@ public class Main {
         System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
 
         for (int i = 1; i < 1000000; i++) {
-            if (bringNewOutputVariation(sortedOutput, parameterSet.getInputSize(), i)) {
+            if (bringNewOutputVariation(sortedOutput, i)) {
                 relevantPorts.add((long) i);
                 sortedOutput.add((long) i);
                 output = searchForOutputImprovement(parameterSet, relevantPorts, i, output);
                 System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
-            }
-            else {
+            } else {
                 //System.out.println(String.format("Port %d does not bring a new output", i));
             }
 
@@ -55,6 +66,7 @@ public class Main {
                 break;
             }
         }
+        System.out.println(clock.getDelta());
     }
 
     private static String toString(long[] input) {
@@ -65,15 +77,14 @@ public class Main {
 
             if (i == input.length - 1) {
                 sb.append("]");
-            }
-            else {
+            } else {
                 sb.append(", ");
             }
         }
         return sb.toString();
     }
 
-    private static boolean bringNewOutputVariation(FileTreeSet<Long> sortedOutput, int inputSize, long portId) {
+    private static boolean bringNewOutputVariation(FileTreeSet<Long> sortedOutput, long portId) {
         return !sortedOutput.contains(portId);
     }
 
@@ -123,7 +134,7 @@ public class Main {
                     originalOutputPoints[j]++;
                 }
             }
-            total+= output.length;
+            total += output.length;
         }
 
         return String.format("%d out of %d", Arrays.stream(originalOutputPoints).sum(), total);
@@ -143,7 +154,7 @@ public class Main {
                     originalOutputPoints[j]++;
                 }
             }
-            total+= output.length;
+            total += output.length;
         }
 
         return total == Arrays.stream(originalOutputPoints).sum();
@@ -152,40 +163,47 @@ public class Main {
     public static boolean resolve(FileTreeSet<Long> relevantPorts, boolean[] input, int inputSize, long portId) {
         if (portId < inputSize) {
             return input[(int) portId];
-        }
-        else {
-            long[] parents = NoName.getParentPorts(relevantPorts, inputSize, portId);
+        } else {
+            long[] parents = CircuitUtils.getParentPorts(relevantPorts, inputSize, portId);
             return !(resolve(relevantPorts, input, inputSize, parents[0]) && resolve(relevantPorts, input, inputSize, parents[1]));
         }
     }
 
     private static FileTreeSet<Long> createSortedOutputFileTreeSet(ParameterSet parameterSet, FileTreeSet<Long> relevantPorts) {
+        try {
+            return createSortedOutputFileTreeSet(
+                    File.createTempFile("tree_", ".tmp"),
+                    File.createTempFile("data_", ".tmp"),
+                    parameterSet,
+                    relevantPorts);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        Comparator<Long> comparator = new Comparator<Long>() {
+    private static FileTreeSet<Long> createSortedOutputFileTreeSet(File treeFile, File dataFile, ParameterSet parameterSet, FileTreeSet<Long> relevantPorts) {
 
-            @Override
-            public int compare(Long o1, Long o2) {
-                int result = 0;
-                int inputSize = parameterSet.getInputSize();
+        Comparator<Long> comparator = (o1, o2) -> {
+            int result = 0;
+            int inputSize = parameterSet.getInputSize();
 
-                for (int i = 0; i < parameterSet.getSampleCount(); i++) {
-                    boolean[] input = parameterSet.getInputSample(i);
+            for (int i = 0; i < parameterSet.getSampleCount(); i++) {
+                boolean[] input = parameterSet.getInputSample(i);
 
-                    boolean b1 = resolve(relevantPorts, input, inputSize, o1);
-                    boolean b2 = resolve(relevantPorts, input, inputSize, o2);
+                boolean b1 = resolve(relevantPorts, input, inputSize, o1);
+                boolean b2 = resolve(relevantPorts, input, inputSize, o2);
 
-                    if (!b1 && b2) {
-                        result = -1;
-                        break;
-                    }
-                    if (b1 && !b2) {
-                        result = 1;
-                        break;
-                    }
+                if (!b1 && b2) {
+                    result = -1;
+                    break;
                 }
-
-                return result;
+                if (b1 && !b2) {
+                    result = 1;
+                    break;
+                }
             }
+
+            return result;
         };
 
         Converter<Long> converter = new Converter<Long>() {
@@ -211,26 +229,22 @@ public class Main {
             }
         };
 
-        try {
-            return new FileTreeSet<Long>(
-                    File.createTempFile("tree_", ".tmp"),
-                    File.createTempFile("data_", ".tmp"),
-                    comparator,
-                    converter);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return new FileTreeSet<>(treeFile, dataFile, comparator, converter);
     }
+
+
 
     private static FileTreeSet<Long> createFileTreeSet() {
+        try {
+            return createFileTreeSet(File.createTempFile("tree_", ".tmp"), File.createTempFile("data_", ".tmp"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        Comparator<Long> comparator = new Comparator<Long>() {
 
-            @Override
-            public int compare(Long o1, Long o2) {
-                return Long.compare(o1, o2);
-            }
-        };
+    private static FileTreeSet<Long> createFileTreeSet(File treeFile, File dataFile) {
+        Comparator<Long> comparator = (o1, o2) -> Long.compare(o1, o2);
 
         Converter<Long> converter = new Converter<Long>() {
 
@@ -264,6 +278,6 @@ public class Main {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
 
+    }
 }

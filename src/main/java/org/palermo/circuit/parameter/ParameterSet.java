@@ -15,6 +15,9 @@ public class ParameterSet {
     private final List<Class<? extends Parameter>> classes;
     private final List<Simplifier> simplifiers;
 
+    private final int inputSize;
+    private final int outputSize;
+
     protected ParameterSet(List<Simplifier> simplifiers,
                            List<Direction> directions,
                            List<Class<? extends Parameter>> classes,
@@ -23,9 +26,20 @@ public class ParameterSet {
         this.directions = directions;
         this.classes = classes;
         this.argumentList = argumentList;
+
+        this.inputSize = computeInputSize();
+        this.outputSize = computeOutputSize();
     }
 
     public int getInputSize() {
+        return this.inputSize;
+    }
+
+    public int getOutputSize() {
+        return this.outputSize;
+    }
+
+    public int computeInputSize() {
         int total = 2; // Adding absolute 0 and absolute 1
         for (int i = 0; i < simplifiers.size(); i++) {
             if (directions.get(i) == Direction.INPUT) {
@@ -35,7 +49,7 @@ public class ParameterSet {
         return total;
     }
 
-    public int getOutputSize() {
+    public int computeOutputSize() {
         int total = 0;
         for (int i = 0; i < simplifiers.size(); i++) {
             if (directions.get(i) == Direction.OUTPUT) {

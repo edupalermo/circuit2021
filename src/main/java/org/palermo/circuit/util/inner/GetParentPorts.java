@@ -1,20 +1,8 @@
-package org.palermo.circuit.engine;
+package org.palermo.circuit.util.inner;
 
-import org.palermo.circuit.parameter.ParameterSet;
 import org.palermo.circuit.util.FileTreeSet;
 
-public class NoName {
-
-    public static boolean isConnectedToSignificantPorts(FileTreeSet relevantPorts, ParameterSet parameterSet, long portId) {
-        if (portId < parameterSet.getInputSize()) {
-            return true;
-        }
-
-        long[] parentPorts = getParentPorts(relevantPorts, parameterSet.getInputSize(), portId);
-        return isConnectedToSignificantPorts(relevantPorts, parameterSet, parentPorts[0]) &&
-                isConnectedToSignificantPorts(relevantPorts, parameterSet, parentPorts[1]);
-    }
-
+public class GetParentPorts {
     public static long[] getParentPorts(FileTreeSet<Long> relevantPorts, int inputSize, long portId) {
         if (inputSize <= 0 ) {
             throw new RuntimeException("Input size cannot be lower than 0");
@@ -31,20 +19,22 @@ public class NoName {
     }
 
     //TODO Can be improved
-    private static long[] getParentPorts(long portId) {
-        int window = 0;
-        int total = 0;
-        int partial = 0;
+    protected static long[] getParentPorts(long portId) {
+        long window = 0;
+        long total = 0;
+        long partial = 0;
 
         while (total < portId) {
-            if (partial >= window) {
+            if (portId - total - 1 >= window) {
                 partial = 0;
                 window++;
+                total += window;
             }
             else {
-                partial++;
+                partial = portId - total;
+                break;
             }
-            total++;
+
         }
         return new long[] {partial, window};
     }
