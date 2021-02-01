@@ -91,6 +91,12 @@ public class ParameterSet {
         return argumentList.get(0).size();
     }
 
+    public List<Parameter> evaluate(Parameter ... parameters) {
+
+        return null; //TODO
+
+    }
+
     public static ParameterSetBuilder builder() {
         return new ParameterSetBuilder();
     }
