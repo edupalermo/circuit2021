@@ -34,7 +34,7 @@ public class Main {
 
         Clock clock = Clock.start();
 
-        FileTreeSet<Long> relevantPorts = createFileTreeSet(
+        FileTreeSet<Long> relevantPorts = CircuitUtils.createLongFileTreeSet(
                 new File("C:\\temp\\relevant.tree"),
                 new File("C:\\temp\\relevant.data"));
         FileTreeSet<Long> sortedOutput = createSortedOutputFileTreeSet(
@@ -43,7 +43,7 @@ public class Main {
                 parameterSet,
                 relevantPorts);
 
-        long[] output = new long[parameterSet.getOutputSize()];
+        long[] output = new long[parameterSet.getOutputBitSize()];
         for (int i = 0; i < output.length; i++) {
             output[i] = 0;
         }
@@ -94,18 +94,18 @@ public class Main {
         long[] originalOutputPoints = new long[originalOutput.length];
         long[] newPortPoints = new long[originalOutput.length];
 
-        int inputSize = parameterSet.getInputSize();
+        int inputSize = parameterSet.getInputBitSize();
 
         for (int i = 0; i < parameterSet.getSampleCount(); i++) {
             boolean[] input = parameterSet.getInputSample(i);
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (resolve(relevantPorts, input, inputSize, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
 
-                if (resolve(relevantPorts, input, inputSize, portId) == output[j]) {
+                if (CircuitUtils.resolve(relevantPorts, input, portId) == output[j]) {
                     newPortPoints[j]++;
                 }
             }
@@ -122,7 +122,7 @@ public class Main {
 
     private static String getProgress(ParameterSet parameterSet, FileTreeSet<Long> relevantPorts, long[] originalOutput) {
         long[] originalOutputPoints = new long[originalOutput.length];
-        int inputSize = parameterSet.getInputSize();
+        int inputSize = parameterSet.getInputBitSize();
         int total = 0;
 
         for (int i = 0; i < parameterSet.getSampleCount(); i++) {
@@ -130,7 +130,7 @@ public class Main {
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (resolve(relevantPorts, input, inputSize, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
             }
@@ -142,7 +142,7 @@ public class Main {
 
     private static boolean finished(ParameterSet parameterSet, FileTreeSet<Long> relevantPorts, long[] originalOutput) {
         long[] originalOutputPoints = new long[originalOutput.length];
-        int inputSize = parameterSet.getInputSize();
+        int inputSize = parameterSet.getInputBitSize();
         int total = 0;
 
         for (int i = 0; i < parameterSet.getSampleCount(); i++) {
@@ -150,7 +150,7 @@ public class Main {
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (resolve(relevantPorts, input, inputSize, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
             }
@@ -158,15 +158,6 @@ public class Main {
         }
 
         return total == Arrays.stream(originalOutputPoints).sum();
-    }
-
-    public static boolean resolve(FileTreeSet<Long> relevantPorts, boolean[] input, int inputSize, long portId) {
-        if (portId < inputSize) {
-            return input[(int) portId];
-        } else {
-            long[] parents = CircuitUtils.getParentPorts(relevantPorts, inputSize, portId);
-            return !(resolve(relevantPorts, input, inputSize, parents[0]) && resolve(relevantPorts, input, inputSize, parents[1]));
-        }
     }
 
     private static FileTreeSet<Long> createSortedOutputFileTreeSet(ParameterSet parameterSet, FileTreeSet<Long> relevantPorts) {
@@ -185,13 +176,13 @@ public class Main {
 
         Comparator<Long> comparator = (o1, o2) -> {
             int result = 0;
-            int inputSize = parameterSet.getInputSize();
+            int inputSize = parameterSet.getInputBitSize();
 
             for (int i = 0; i < parameterSet.getSampleCount(); i++) {
                 boolean[] input = parameterSet.getInputSample(i);
 
-                boolean b1 = resolve(relevantPorts, input, inputSize, o1);
-                boolean b2 = resolve(relevantPorts, input, inputSize, o2);
+                boolean b1 = CircuitUtils.resolve(relevantPorts, input, o1);
+                boolean b2 = CircuitUtils.resolve(relevantPorts, input, o2);
 
                 if (!b1 && b2) {
                     result = -1;
@@ -236,48 +227,9 @@ public class Main {
 
     private static FileTreeSet<Long> createFileTreeSet() {
         try {
-            return createFileTreeSet(File.createTempFile("tree_", ".tmp"), File.createTempFile("data_", ".tmp"));
+            return CircuitUtils.createLongFileTreeSet(File.createTempFile("tree_", ".tmp"), File.createTempFile("data_", ".tmp"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-
-    private static FileTreeSet<Long> createFileTreeSet(File treeFile, File dataFile) {
-        Comparator<Long> comparator = (o1, o2) -> Long.compare(o1, o2);
-
-        Converter<Long> converter = new Converter<Long>() {
-
-            @Override
-            public byte[] serialize(Long input) {
-                ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                buffer.putLong(input);
-                return buffer.array();
-            }
-
-            @Override
-            public Long deserialize(byte[] input) {
-                ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                buffer.put(input);
-                buffer.flip();//need flip
-                return buffer.getLong();
-            }
-
-            @Override
-            public int getSize() {
-                return Long.BYTES;
-            }
-        };
-
-        try {
-            return new FileTreeSet<Long>(
-                    File.createTempFile("tree_", ".tmp"),
-                    File.createTempFile("data_", ".tmp"),
-                    comparator,
-                    converter);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 }
