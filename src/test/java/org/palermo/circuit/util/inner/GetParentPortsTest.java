@@ -1,5 +1,6 @@
 package org.palermo.circuit.util.inner;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -40,8 +41,16 @@ public class GetParentPortsTest {
     @ParameterizedTest
     @MethodSource("scenarios")
     void test(long portId, long left, long right) {
-        long[] answer = GetParentPorts.getParentPorts(portId);
+        long[] answer = GetParentPorts.getParentPortIds(portId);
         assertThat(answer[0]).isEqualTo(left);
         assertThat(answer[1]).isEqualTo(right);
+    }
+
+    @Test
+    void testInverseFunction() {
+        for (int i = 0; i < 10000; i++) {
+            long parents[] = GetParentPorts.getParentPortIds(i);
+            assertThat(GetParentPorts.getPortIdByParentPortIds(parents[0], parents[1])).isEqualTo(i);
+        }
     }
 }

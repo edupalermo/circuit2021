@@ -91,39 +91,43 @@ public class ParameterSet {
         return argumentList.get(0).size();
     }
 
-    public List<Object> evaluate(long[] outputPorts, FileTreeSet<Long> relevantPorts, Object ... parameters) {
+    public List<Object> evaluate(long[] outputPorts, Object ... parameters) {
+        boolean[] input = translateToByteArray(parameters);
 
-        boolean[] input = new boolean[this.inputBitSize];
+        boolean[] output = generateOutput(outputPorts, input);
+
+        return translateToOutputParameters(output);
+    }
+
+    private List<Object> translateToOutputParameters(boolean[] output) {
+        List<Object> outputParameters = new ArrayList<>();
         int position = 0;
+        for (int i = 0; i < getOutputParameterCount(); i++) {
+            int size = getOutputSimplifier(i).getSize();
+            outputParameters.add(getOutputSimplifier(i).resolve(Arrays.copyOfRange(output, position, position + size)));
+            position += size;
+        }
+        return outputParameters;
+    }
+
+    private boolean[] translateToByteArray(Object[] parameters) {
+        boolean[] input = new boolean[this.inputBitSize];
+        input[0] = false;
+        input[1] = true;
+        int position = 2;
         for (int i = 0; i < parameters.length; i++) {
             boolean[] partial = getInputSimplifier(i).simplify(parameters[i]);
             System.arraycopy(partial, 0, input, position, partial.length);
             position += partial.length;
         }
-
-        boolean[] output = generateOutput(outputPorts, relevantPorts, input);
-
-        List<Object> outputParameters = new ArrayList<>();
-        position = 0;
-        for (int i = 0; i < getOutputParameterCount(); i++) {
-            int size = getOutputSimplifier(i).getSize();
-            outputParameters.add(getOutputSimplifier(i).resolve(Arrays.copyOfRange(output, position, position + size)));
-            position += size;
-
-            System.out.println("e0" + getOutputSimplifier(i).resolve(new boolean[] {false, false}));
-            System.out.println("e1" + getOutputSimplifier(i).resolve(new boolean[] {false, true}));
-            System.out.println("e2" + getOutputSimplifier(i).resolve(new boolean[] {true, false}));
-            System.out.println("e3" + getOutputSimplifier(i).resolve(new boolean[] {true, true}));
-        }
-
-        return outputParameters;
+        return input;
     }
 
-    private boolean[] generateOutput(long[] outputPorts, FileTreeSet<Long> relevantPorts, boolean[] input) {
+    private boolean[] generateOutput(long[] outputPorts, boolean[] input) {
         boolean output[] = new boolean[this.outputBitSize];
 
         for (int i = 0; i < outputPorts.length; i++) {
-            output[i] = CircuitUtils.resolve(relevantPorts, input, outputPorts[i]);
+            output[i] = CircuitUtils.resolve(input, outputPorts[i]);
         }
 
         return output;

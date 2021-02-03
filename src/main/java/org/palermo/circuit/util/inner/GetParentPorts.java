@@ -1,9 +1,7 @@
 package org.palermo.circuit.util.inner;
 
-import org.palermo.circuit.util.FileTreeSet;
-
 public class GetParentPorts {
-    public static long[] getParentPorts(FileTreeSet<Long> relevantPorts, int inputSize, long portId) {
+    public static long[] getParentPortIds(int inputSize, long portId) {
         if (inputSize <= 0 ) {
             throw new RuntimeException("Input size cannot be lower than 0");
         }
@@ -14,12 +12,11 @@ public class GetParentPorts {
             return new long[] {};
         }
 
-        long[] baseParents = getParentPorts(portId - inputSize);
-        return new long[] {relevantPorts.select(baseParents[0]), relevantPorts.select(baseParents[1])};
+        long[] baseParents = getParentPortIds(portId - inputSize);
+        return new long[] {baseParents[0], baseParents[1]};
     }
 
-    //TODO Can be improved
-    protected static long[] getParentPorts(long portId) {
+    protected static long[] getParentPortIds(long portId) {
         long window = 0;
         long total = 0;
         long partial = 0;
@@ -37,5 +34,17 @@ public class GetParentPorts {
 
         }
         return new long[] {partial, window};
+    }
+
+    public static long getPortIdByParentPortIds(int inputSize, long left, long right) {
+        return getPortIdByParentPortIds(left, right) + inputSize;
+    }
+
+    protected static long getPortIdByParentPortIds(long left, long right) {
+        long portId = 0;
+        for (int i = 0; i <= right; i++) {
+            portId += i;
+        }
+        return portId + left;
     }
 }

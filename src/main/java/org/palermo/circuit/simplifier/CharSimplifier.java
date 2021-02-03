@@ -33,7 +33,7 @@ public class CharSimplifier implements Simplifier<Character> {
         if (list.size() > 1) {
 
             TreeSet<Integer> hasDifference = new TreeSet<>();
-            for (int i = 1; i < list.size(); i++) {
+            for (int i = 1; i < list.size(); i++) { // goes through all parameters, except the first = mask
                 for (int j = 0; j < Character.SIZE; j++) {
                     if (!hasDifference.contains(j)) {
                         if (CharConverter.toBooleanArray(((CharParameter) list.get(i)).getRawData())[j] != mask[j]) {

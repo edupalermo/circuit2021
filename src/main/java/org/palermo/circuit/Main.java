@@ -28,18 +28,20 @@ public class Main {
                 .add(CharParameter.of('d'), EnumParameter.of("CONSONANT"))
                 .add(CharParameter.of('e'), EnumParameter.of("VOWEL"))
                 .add(CharParameter.of('f'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('A'), EnumParameter.of("VOWEL"))
+                .add(CharParameter.of('B'), EnumParameter.of("CONSONANT"))
                 .add(CharParameter.of('-'), EnumParameter.of("SYMBOL"))
+                .add(CharParameter.of('"'), EnumParameter.of("SYMBOL"))
+                .add(CharParameter.of('&'), EnumParameter.of("SYMBOL"))
                 .add(CharParameter.of('0'), EnumParameter.of("NUMBER"))
+                .add(CharParameter.of('4'), EnumParameter.of("NUMBER"))
+                .add(CharParameter.of('9'), EnumParameter.of("NUMBER"))
                 .build();
 
         Clock clock = Clock.start();
 
-        FileTreeSet<Long> relevantPorts = CircuitUtils.createLongFileTreeSet(
-                new File("C:\\temp\\relevant.tree"),
-                new File("C:\\temp\\relevant.data"));
+        FileTreeSet<Long> relevantPorts = CircuitUtils.createLongFileTreeSet();
         FileTreeSet<Long> sortedOutput = createSortedOutputFileTreeSet(
-                new File("C:\\temp\\sortedOutput.tree"),
-                new File("C:\\temp\\sortedOutput.data"),
                 parameterSet,
                 relevantPorts);
 
@@ -53,20 +55,41 @@ public class Main {
         System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
 
         for (int i = 1; i < 1000000; i++) {
-            if (bringNewOutputVariation(sortedOutput, i)) {
-                relevantPorts.add((long) i);
-                sortedOutput.add((long) i);
-                output = searchForOutputImprovement(parameterSet, relevantPorts, i, output);
-                System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
-            } else {
-                //System.out.println(String.format("Port %d does not bring a new output", i));
-            }
+            long portId = translateToPortId(relevantPorts, parameterSet.getInputBitSize(), i);
+            if (connectedWithRelevantPorts(relevantPorts, parameterSet.getInputBitSize(), portId)) {
+                if (bringNewOutputVariation(sortedOutput, portId)) {
+                    relevantPorts.add(portId);
+                    sortedOutput.add(portId);
+                    output = searchForOutputImprovement(parameterSet, portId, output);
+                    System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
+                } else {
+                    //System.out.println(String.format("Port %d does not bring a new output", i));
+                }
 
-            if (finished(parameterSet, relevantPorts, output)) {
-                break;
+                if (finished(parameterSet, relevantPorts, output)) {
+                    break;
+                }
             }
         }
         System.out.println(clock.getDelta());
+    }
+
+    private static long translateToPortId(FileTreeSet<Long> relevantPorts, int inputSize, long portId) {
+        if (portId < inputSize) {
+            return portId;
+        }
+        long parents[] = CircuitUtils.getParentPorts(inputSize, portId);
+        long translated = CircuitUtils.getPortIdByParentPortIds(inputSize, relevantPorts.select(parents[0]), relevantPorts.select(parents[1]));
+        //System.out.println(String.format("Original %d Translated %d", portId, translated));
+        return translated;
+    }
+
+    private static boolean connectedWithRelevantPorts(FileTreeSet<Long> relevantPorts, int inputSize, long portId) {
+        if (portId < inputSize) {
+            return true;
+        }
+        long parents[] = CircuitUtils.getParentPorts(inputSize, portId);
+        return relevantPorts.contains(parents[0]) && relevantPorts.contains(parents[1]);
     }
 
     private static String toString(long[] input) {
@@ -88,7 +111,7 @@ public class Main {
         return !sortedOutput.contains(portId);
     }
 
-    private static long[] searchForOutputImprovement(ParameterSet parameterSet, FileTreeSet<Long> relevantPorts, int portId, long[] originalOutput) {
+    private static long[] searchForOutputImprovement(ParameterSet parameterSet, long portId, long[] originalOutput) {
 
         long[] newOutput = ArrayUtils.clone(originalOutput);
         long[] originalOutputPoints = new long[originalOutput.length];
@@ -101,11 +124,11 @@ public class Main {
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
 
-                if (CircuitUtils.resolve(relevantPorts, input, portId) == output[j]) {
+                if (CircuitUtils.resolve(input, portId) == output[j]) {
                     newPortPoints[j]++;
                 }
             }
@@ -130,7 +153,7 @@ public class Main {
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
             }
@@ -150,7 +173,7 @@ public class Main {
             boolean[] output = parameterSet.getOutputSample(i);
 
             for (int j = 0; j < output.length; j++) {
-                if (CircuitUtils.resolve(relevantPorts, input, originalOutput[j]) == output[j]) {
+                if (CircuitUtils.resolve(input, originalOutput[j]) == output[j]) {
                     originalOutputPoints[j]++;
                 }
             }
@@ -181,8 +204,8 @@ public class Main {
             for (int i = 0; i < parameterSet.getSampleCount(); i++) {
                 boolean[] input = parameterSet.getInputSample(i);
 
-                boolean b1 = CircuitUtils.resolve(relevantPorts, input, o1);
-                boolean b2 = CircuitUtils.resolve(relevantPorts, input, o2);
+                boolean b1 = CircuitUtils.resolve(input, o1);
+                boolean b2 = CircuitUtils.resolve(input, o2);
 
                 if (!b1 && b2) {
                     result = -1;

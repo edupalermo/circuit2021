@@ -25,25 +25,43 @@ public class Resolver {
                 .add(CharParameter.of('0'), EnumParameter.of("NUMBER"))
                 .build();
 
-        long[] output = new long[] {387, 2888};
-        FileTreeSet<Long> relevantPorts = CircuitUtils.createLongFileTreeSet(
-                new File("C:\\temp\\relevant.tree"),
-                new File("C:\\temp\\relevant.data"));
+        long[] output = new long[] {115449, 1565789285};
 
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('a')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('b')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('c')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('d')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('e')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('f')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('g')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('h')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('i')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('j')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('k')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('-')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('=')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('0')).get(0));
-        System.out.println(parameterSet.evaluate(output, relevantPorts, Character.valueOf('1')).get(0));
+        evaluate(output, parameterSet, 'a');
+        evaluate(output, parameterSet, 'b');
+        evaluate(output, parameterSet, 'c');
+        evaluate(output, parameterSet, 'd');
+        evaluate(output, parameterSet, 'e');
+        evaluate(output, parameterSet, 'f');
+        evaluate(output, parameterSet, 'g');
+        evaluate(output, parameterSet, 'h');
+        evaluate(output, parameterSet, 'i');
+        evaluate(output, parameterSet, 'j');
+        evaluate(output, parameterSet, 'k');
+        evaluate(output, parameterSet, 'l');
+        evaluate(output, parameterSet, 'm');
+        evaluate(output, parameterSet, 'n');
+        evaluate(output, parameterSet, 'o');
+        evaluate(output, parameterSet, 'p');
+        evaluate(output, parameterSet, 'A');
+        evaluate(output, parameterSet, 'B');
+        evaluate(output, parameterSet, 'C');
+        evaluate(output, parameterSet, 'D');
+        evaluate(output, parameterSet, 'E');
+        evaluate(output, parameterSet, 'F');
+        evaluate(output, parameterSet, '-');
+        evaluate(output, parameterSet, '=');
+        evaluate(output, parameterSet, '$');
+        evaluate(output, parameterSet, '0');
+        evaluate(output, parameterSet, '1');
+        evaluate(output, parameterSet, '2');
+        evaluate(output, parameterSet, '3');
+        evaluate(output, parameterSet, '4');
+        evaluate(output, parameterSet, '5');
+        evaluate(output, parameterSet, '6');
+    }
+
+    private static void evaluate(long[] output, ParameterSet parameterSet, char input) {
+        System.out.println(String.format("Input: %s Output %s", input, parameterSet.evaluate(output, Character.valueOf(input)).get(0)));
     }
 }
