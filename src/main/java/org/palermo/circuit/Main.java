@@ -2,6 +2,7 @@ package org.palermo.circuit;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.palermo.circuit.clock.Clock;
+import org.palermo.circuit.output.OutputContainer;
 import org.palermo.circuit.parameter.CharParameter;
 import org.palermo.circuit.parameter.Direction;
 import org.palermo.circuit.parameter.EnumParameter;
@@ -18,8 +19,8 @@ import java.util.Comparator;
 
 public class Main {
 
-    public static void main(String arg[]) {
-        ParameterSet parameterSet = ParameterSet.builder()
+    public static ParameterSet createParameterSet() {
+        return ParameterSet.builder()
                 .configure(CharParameter.class, EnumParameter.class)
                 .configure(Direction.INPUT, Direction.OUTPUT)
                 .add(CharParameter.of('a'), EnumParameter.of("VOWEL"))
@@ -28,15 +29,36 @@ public class Main {
                 .add(CharParameter.of('d'), EnumParameter.of("CONSONANT"))
                 .add(CharParameter.of('e'), EnumParameter.of("VOWEL"))
                 .add(CharParameter.of('f'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('g'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('h'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('i'), EnumParameter.of("VOWEL"))
+                .add(CharParameter.of('j'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('k'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('l'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('m'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('n'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('o'), EnumParameter.of("VOWEL"))
+                .add(CharParameter.of('p'), EnumParameter.of("CONSONANT"))
                 .add(CharParameter.of('A'), EnumParameter.of("VOWEL"))
                 .add(CharParameter.of('B'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('C'), EnumParameter.of("CONSONANT"))
+                .add(CharParameter.of('D'), EnumParameter.of("CONSONANT"))
                 .add(CharParameter.of('-'), EnumParameter.of("SYMBOL"))
+                .add(CharParameter.of('='), EnumParameter.of("SYMBOL"))
                 .add(CharParameter.of('"'), EnumParameter.of("SYMBOL"))
                 .add(CharParameter.of('&'), EnumParameter.of("SYMBOL"))
+                .add(CharParameter.of('*'), EnumParameter.of("SYMBOL"))
+                .add(CharParameter.of('+'), EnumParameter.of("SYMBOL"))
                 .add(CharParameter.of('0'), EnumParameter.of("NUMBER"))
+                .add(CharParameter.of('1'), EnumParameter.of("NUMBER"))
+                .add(CharParameter.of('2'), EnumParameter.of("NUMBER"))
                 .add(CharParameter.of('4'), EnumParameter.of("NUMBER"))
                 .add(CharParameter.of('9'), EnumParameter.of("NUMBER"))
                 .build();
+    }
+
+    public static void main(String arg[]) {
+        ParameterSet parameterSet = createParameterSet();
 
         Clock clock = Clock.start();
 
@@ -45,31 +67,33 @@ public class Main {
                 parameterSet,
                 relevantPorts);
 
-        long[] output = new long[parameterSet.getOutputBitSize()];
-        for (int i = 0; i < output.length; i++) {
-            output[i] = 0;
-        }
-        relevantPorts.add(0L);
-        sortedOutput.add(0L);
+        OutputContainer outputContainer = OutputContainer.of(parameterSet);
 
-        System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
-
-        for (int i = 1; i < 1000000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             long portId = translateToPortId(relevantPorts, parameterSet.getInputBitSize(), i);
-            if (connectedWithRelevantPorts(relevantPorts, parameterSet.getInputBitSize(), portId)) {
+            //System.out.println("Port translated " + partial.getDelta());
+            //if (connectedWithRelevantPorts(relevantPorts, parameterSet.getInputBitSize(), portId)) {
+                //System.out.println("Port relevant " + partial.getDelta());
                 if (bringNewOutputVariation(sortedOutput, portId)) {
+                    //System.out.println("Port bring new output " + partial.getDelta());
                     relevantPorts.add(portId);
                     sortedOutput.add(portId);
-                    output = searchForOutputImprovement(parameterSet, portId, output);
-                    System.out.println(String.format("Relevant Ports %d Output %s Points %s", relevantPorts.size(), toString(output), getProgress(parameterSet, relevantPorts, output)));
+                    if (outputContainer.evaluate(portId)) {
+                        System.out.println(String.format("Relevant Ports %d Output %s Progress %s", relevantPorts.size(), outputContainer.getOutputAsString(), outputContainer.getProgress()));
+                    }
+                    //System.out.println("Searched for improvement " + partial.getDelta());
                 } else {
-                    //System.out.println(String.format("Port %d does not bring a new output", i));
+                    //System.out.println("Port bring does not bring new output " + partial.getDelta());
                 }
 
-                if (finished(parameterSet, relevantPorts, output)) {
+                if (outputContainer.finished()) {
                     break;
                 }
-            }
+            //}
+            //else {
+            //    System.out.println("Port not relevant " + partial.getDelta());
+            //}
+            //System.out.println("Last Log " + partial.getDelta());
         }
         System.out.println(clock.getDelta());
     }
@@ -116,8 +140,6 @@ public class Main {
         long[] newOutput = ArrayUtils.clone(originalOutput);
         long[] originalOutputPoints = new long[originalOutput.length];
         long[] newPortPoints = new long[originalOutput.length];
-
-        int inputSize = parameterSet.getInputBitSize();
 
         for (int i = 0; i < parameterSet.getSampleCount(); i++) {
             boolean[] input = parameterSet.getInputSample(i);

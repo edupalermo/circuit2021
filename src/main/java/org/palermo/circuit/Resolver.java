@@ -12,20 +12,9 @@ public class Resolver {
 
     public static void main(String args[]) {
 
-        ParameterSet parameterSet = ParameterSet.builder()
-                .configure(CharParameter.class, EnumParameter.class)
-                .configure(Direction.INPUT, Direction.OUTPUT)
-                .add(CharParameter.of('a'), EnumParameter.of("VOWEL"))
-                .add(CharParameter.of('b'), EnumParameter.of("CONSONANT"))
-                .add(CharParameter.of('c'), EnumParameter.of("CONSONANT"))
-                .add(CharParameter.of('d'), EnumParameter.of("CONSONANT"))
-                .add(CharParameter.of('e'), EnumParameter.of("VOWEL"))
-                .add(CharParameter.of('f'), EnumParameter.of("CONSONANT"))
-                .add(CharParameter.of('-'), EnumParameter.of("SYMBOL"))
-                .add(CharParameter.of('0'), EnumParameter.of("NUMBER"))
-                .build();
+        ParameterSet parameterSet = Main.createParameterSet();
 
-        long[] output = new long[] {115449, 1565789285};
+        long[] output = new long[] {287902, 287774};
 
         evaluate(output, parameterSet, 'a');
         evaluate(output, parameterSet, 'b');
@@ -43,15 +32,33 @@ public class Resolver {
         evaluate(output, parameterSet, 'n');
         evaluate(output, parameterSet, 'o');
         evaluate(output, parameterSet, 'p');
+        evaluate(output, parameterSet, 'q');
+        evaluate(output, parameterSet, 'r');
+        evaluate(output, parameterSet, 's');
+        evaluate(output, parameterSet, 't');
+        evaluate(output, parameterSet, 'u');
+        evaluate(output, parameterSet, 'v');
+        evaluate(output, parameterSet, 'w');
+        evaluate(output, parameterSet, 'x');
+        evaluate(output, parameterSet, 'y');
+        evaluate(output, parameterSet, 'z');
         evaluate(output, parameterSet, 'A');
         evaluate(output, parameterSet, 'B');
         evaluate(output, parameterSet, 'C');
         evaluate(output, parameterSet, 'D');
         evaluate(output, parameterSet, 'E');
         evaluate(output, parameterSet, 'F');
+        evaluate(output, parameterSet, 'G');
+        evaluate(output, parameterSet, 'H');
+        evaluate(output, parameterSet, 'I');
+        evaluate(output, parameterSet, 'J');
         evaluate(output, parameterSet, '-');
         evaluate(output, parameterSet, '=');
+        evaluate(output, parameterSet, '"');
+        evaluate(output, parameterSet, '*');
+        evaluate(output, parameterSet, '+');
         evaluate(output, parameterSet, '$');
+        evaluate(output, parameterSet, '&');
         evaluate(output, parameterSet, '0');
         evaluate(output, parameterSet, '1');
         evaluate(output, parameterSet, '2');
@@ -59,6 +66,9 @@ public class Resolver {
         evaluate(output, parameterSet, '4');
         evaluate(output, parameterSet, '5');
         evaluate(output, parameterSet, '6');
+        evaluate(output, parameterSet, '7');
+        evaluate(output, parameterSet, '8');
+        evaluate(output, parameterSet, '9');
     }
 
     private static void evaluate(long[] output, ParameterSet parameterSet, char input) {
