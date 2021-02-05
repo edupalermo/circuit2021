@@ -69,7 +69,7 @@ public class Main {
 
         OutputContainer outputContainer = OutputContainer.of(parameterSet);
 
-        for (int i = 0; i < 1000000; i++) {
+        for (long i = 0; i < Long.MAX_VALUE; i++) {
             long portId = translateToPortId(relevantPorts, parameterSet.getInputBitSize(), i);
             //System.out.println("Port translated " + partial.getDelta());
             //if (connectedWithRelevantPorts(relevantPorts, parameterSet.getInputBitSize(), portId)) {
@@ -79,7 +79,7 @@ public class Main {
                     relevantPorts.add(portId);
                     sortedOutput.add(portId);
                     if (outputContainer.evaluate(portId)) {
-                        System.out.println(String.format("Relevant Ports %d Output %s Progress %s", relevantPorts.size(), outputContainer.getOutputAsString(), outputContainer.getProgress()));
+                        System.out.println(String.format("Relevant Ports %d Output %s Progress %s - %s", relevantPorts.size(), outputContainer.getOutputAsString(), outputContainer.getProgress(), clock.getDelta()));
                     }
                     //System.out.println("Searched for improvement " + partial.getDelta());
                 } else {
