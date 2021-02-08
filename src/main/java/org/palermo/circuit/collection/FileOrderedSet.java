@@ -1,4 +1,4 @@
-package org.palermo.circuit.util;
+package org.palermo.circuit.collection;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,14 +9,14 @@ import java.util.Comparator;
 /*
 https://algs4.cs.princeton.edu/code/edu/princeton/cs/algs4/AVLTreeST.java.html
  */
-public class FileTreeSet<T> {
+public class FileOrderedSet<T> implements OrderedSet<T> {
 
     private RandomAccessFile tree;
     private RandomAccessFile data;
     private final Comparator<T> comparator;
     private final Converter<T> converter;
 
-    public FileTreeSet(File tree, File data, Comparator<T> comparator, Converter<T> converter) {
+    public FileOrderedSet(File tree, File data, Comparator<T> comparator, Converter<T> converter) {
         try {
             this.tree = new RandomAccessFile(tree, "rw");
             this.data = new RandomAccessFile(data, "rw");
@@ -77,6 +77,18 @@ public class FileTreeSet<T> {
     private long size(long offset) throws IOException {
         if (offset == 0x00) return 0;
         return readSize(offset);
+    }
+
+    @Override
+    public int height() {
+        try {
+            if (this.tree.length() == 0) {
+                return -1;
+            }
+            return this.height(this.readRootOffset());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private int height(long offset) throws IOException {
@@ -236,6 +248,7 @@ public class FileTreeSet<T> {
         return height(readLeftOffset(offset)) - height(readRightOffset(offset));
     }
 
+    @Override
     public T select(long k) {
         try {
             if (k < 0 || k >= size()) throw new IllegalArgumentException("k is not in range 0-" + (size() - 1));

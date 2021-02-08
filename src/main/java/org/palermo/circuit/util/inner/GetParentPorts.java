@@ -1,6 +1,7 @@
 package org.palermo.circuit.util.inner;
 
 public class GetParentPorts {
+
     public static long[] getParentPortIds(int inputSize, long portId) {
         if (inputSize <= 0 ) {
             throw new RuntimeException("Input size cannot be lower than 0");

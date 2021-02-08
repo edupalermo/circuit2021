@@ -1,9 +1,8 @@
 package org.palermo.circuit.util;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.palermo.circuit.collection.Converter;
+import org.palermo.circuit.collection.FileOrderedSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.TreeSet;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -123,37 +121,37 @@ class FileTreeTest {
     @Test
     void testContains() throws IOException {
         int size = 1000;
-        FileTreeSet<Long> fileTreeSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), size);
-        assertThat(fileTreeSet.size()).isEqualTo(size);
+        FileOrderedSet<Long> fileOrderedSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), size);
+        assertThat(fileOrderedSet.size()).isEqualTo(size);
         for (int i = 0; i < size; i++) {
-            assertThat(fileTreeSet.contains((long) i)).isEqualTo(true);
+            assertThat(fileOrderedSet.contains((long) i)).isEqualTo(true);
         }
 
-        assertThat(fileTreeSet.contains((long) size)).isEqualTo(false);
-        assertThat(fileTreeSet.contains((long) size + 1)).isEqualTo(false);
+        assertThat(fileOrderedSet.contains((long) size)).isEqualTo(false);
+        assertThat(fileOrderedSet.contains((long) size + 1)).isEqualTo(false);
     }
 
     @Test
     void testContainsRandom() throws IOException {
         int size = 1000;
-        FileTreeSet<Long> fileTreeSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"));
+        FileOrderedSet<Long> fileOrderedSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"));
         TreeSet<Long> treeSet = new TreeSet<Long>();
 
         for (int i = 0; i < size; i++) {
-            fileTreeSet.add((long) i);
+            fileOrderedSet.add((long) i);
             treeSet.add((long) i);
         }
 
-        assertThat(treeSet.size()).isEqualTo(fileTreeSet.size());
+        assertThat(treeSet.size()).isEqualTo(fileOrderedSet.size());
         for (Long l : treeSet) {
-            assertThat(fileTreeSet.contains(l)).isEqualTo(true);
+            assertThat(fileOrderedSet.contains(l)).isEqualTo(true);
         }
     }
 
 
     @Test
     void testPersisted() throws IOException {
-        FileTreeSet<Long> oldFileTree = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), 6);
+        FileOrderedSet<Long> oldFileTree = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), 6);
         //oldFileTree.reBalance();
         //oldFileTree.close();
     }
@@ -161,14 +159,14 @@ class FileTreeTest {
     @Test
     void testSelect() throws IOException {
         Random random = new Random();
-        FileTreeSet<Long> fileTreeSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), 6);
+        FileOrderedSet<Long> fileOrderedSet = createTree(new File("c:\\temp\\tree.txt"), new File("c:\\temp\\data.txt"), 6);
 
         for (int i = 0; i < 100; i++) {
-            fileTreeSet.add(random.nextLong());
+            fileOrderedSet.add(random.nextLong());
         }
 
         for (int i = 0; i < 100; i++) {
-            System.out.println(fileTreeSet.select(i));
+            System.out.println(fileOrderedSet.select(i));
         }
 
         //oldFileTree.reBalance();
@@ -176,11 +174,11 @@ class FileTreeTest {
     }
 
 
-    private static FileTreeSet<Long> createTree(int elements) throws IOException {
+    private static FileOrderedSet<Long> createTree(int elements) throws IOException {
         return createTree(File.createTempFile("tree_", ".tmp"), File.createTempFile("data_", ".tmp"), elements);
     }
 
-    private static FileTreeSet<Long> createTree(File treeFile, File dataFile, int elements) throws IOException {
+    private static FileOrderedSet<Long> createTree(File treeFile, File dataFile, int elements) throws IOException {
         if (treeFile.exists()) {
             treeFile.delete();
         }
@@ -218,7 +216,7 @@ class FileTreeTest {
             }
         };
 
-        FileTreeSet<Long> oldFileTree = new FileTreeSet<Long>(treeFile, dataFile, comparator, converter);
+        FileOrderedSet<Long> oldFileTree = new FileOrderedSet<Long>(treeFile, dataFile, comparator, converter);
 
         for (int i = 0; i < elements; i++) {
             oldFileTree.add((long) i);
@@ -227,7 +225,7 @@ class FileTreeTest {
         return oldFileTree;
     }
 
-    private static FileTreeSet<Long> createTree(File treeFile, File dataFile) throws IOException {
+    private static FileOrderedSet<Long> createTree(File treeFile, File dataFile) throws IOException {
         if (treeFile.exists()) {
             treeFile.delete();
         }
@@ -265,6 +263,6 @@ class FileTreeTest {
             }
         };
 
-        return new FileTreeSet<Long>(treeFile, dataFile, comparator, converter);
+        return new FileOrderedSet<Long>(treeFile, dataFile, comparator, converter);
     }
 }

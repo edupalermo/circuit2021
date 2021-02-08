@@ -8,6 +8,8 @@
     <artifactId>circuit</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <packaging>jar</packaging>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
@@ -30,7 +32,8 @@
                 <configuration>
                     <mainClass>org.palermo.circuit.Main</mainClass>
                     <!-- optional -->
-                    <workingDirectory>c://temp</workingDirectory>
+                    <!-- workingDirectory>c://temp</workingDirectory -->
+                    <executable>java -Xmx5g -Xmx16g org.palermo.circuit.Main</executable>
                     <!--arguments>
                         <argument>-X</argument>
                         <argument>myproject:dist</argument>
@@ -38,6 +41,37 @@
                     <environmentVariables>
                         <LANG>en_US</LANG>
                     </environmentVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/libs
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>libs/</classpathPrefix>
+                            <mainClass>org.palermo.circuit.Main</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>

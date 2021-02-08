@@ -1,11 +1,7 @@
 package org.palermo.circuit.output;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.palermo.circuit.parameter.ParameterSet;
 import org.palermo.circuit.util.CircuitUtils;
-import org.palermo.circuit.util.FileTreeSet;
-
-import java.util.Arrays;
 
 public class OutputContainer {
 

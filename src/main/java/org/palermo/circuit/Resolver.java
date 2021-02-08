@@ -1,18 +1,16 @@
 package org.palermo.circuit;
 
-import org.palermo.circuit.parameter.*;
-import org.palermo.circuit.util.CircuitUtils;
-import org.palermo.circuit.util.FileTreeSet;
-
-import java.io.File;
-import java.util.List;
+import org.palermo.circuit.parameter.ParameterSet;
+import org.palermo.circuit.problem.VowelProblem;
 
 public class Resolver {
 
 
     public static void main(String args[]) {
 
-        ParameterSet parameterSet = Main.createParameterSet();
+        ParameterSet parameterSet = VowelProblem.createParameterSet();
+
+        System.out.println("Input Size: " + parameterSet.getInputBitSize());
 
         long[] output = new long[] {287902, 287774};
 

@@ -2,7 +2,6 @@ package org.palermo.circuit.parameter;
 
 import org.palermo.circuit.simplifier.Simplifier;
 import org.palermo.circuit.util.CircuitUtils;
-import org.palermo.circuit.util.FileTreeSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +17,11 @@ public class ParameterSet {
     private final int inputBitSize;
     private final int outputBitSize;
 
+    private boolean[][] inputSample;
+    private boolean[][] outputSample;
+
+
+
     protected ParameterSet(List<Simplifier> simplifiers,
                            List<Direction> directions,
                            List<Class<? extends Parameter>> classes,
@@ -29,6 +33,15 @@ public class ParameterSet {
 
         this.inputBitSize = computeInputSize();
         this.outputBitSize = computeOutputSize();
+
+        this.inputSample = new boolean[argumentList.get(0).size()][];
+        this.outputSample = new boolean[argumentList.get(0).size()][];
+
+        for (int i = 0 ; i < argumentList.get(0).size(); i++) {
+            this.inputSample[i] = getPrivateInputSample(i);
+            this.outputSample[i] = getPrivateOutputSample(i);
+        }
+
     }
 
     public int getInputBitSize() {
@@ -60,6 +73,11 @@ public class ParameterSet {
     }
 
     public boolean[] getInputSample(int i) {
+        return this.inputSample[i];
+   }
+
+
+    private boolean[] getPrivateInputSample(int i) {
         boolean[] input = new boolean[getInputBitSize()];
         int j = 0;
         input[j++] = false;
@@ -74,7 +92,7 @@ public class ParameterSet {
         return input;
     }
 
-    public boolean[] getOutputSample(int i) {
+    private boolean[] getPrivateOutputSample(int i) {
         boolean[] output = new boolean[getOutputBitSize()];
         int j = 0;
         for (int s = 0; s < simplifiers.size(); s++) {
@@ -85,6 +103,10 @@ public class ParameterSet {
             }
         }
         return output;
+    }
+
+    public boolean[] getOutputSample(int i) {
+        return this.outputSample[i];
     }
 
     public int getSampleCount() {

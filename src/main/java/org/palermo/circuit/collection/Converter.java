@@ -1,10 +1,10 @@
-package org.palermo.circuit.util;
+package org.palermo.circuit.collection;
 
 public interface Converter<T> {
 
     byte[] serialize(T input);
 
-     T deserialize(byte[] input);
+    T deserialize(byte[] input);
 
     int getSize();
 }
